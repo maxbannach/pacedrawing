@@ -1,0 +1,94 @@
+%%
+% pacedrawing.sty
+%%%%%%%%%%%%%%%%%
+% A LuaLaTeX package that utilizes tikz graph drawing to
+% draw graphs and tree decompositions given in the pace graph format.
+%
+% Author: Max Bannach
+%
+\ProvidesPackage{pacedrawing}[2018/06/08 v1.0]
+
+% We will parse the graph files using Lua
+\RequirePackage{luacode}
+
+% We draw the graphs using tikz and load minimal graph libraries to do so.
+\RequirePackage{tikz}
+\usetikzlibrary{graphs, graphdrawing, quotes, babel}
+\usegdlibrary{force, trees}
+
+%
+% The user may change the appearance of graphs with these options.
+% Graphs are drawn using the /graphs/pacegraph key, while tree decompositions
+% are drawn using the /graphs/pacedecomposition key.
+%
+\tikzset{
+  graphs/pace/dimacs/.style = {
+    spring electrical layout
+  },
+  graphs/pace/treedecomposition/.style = {
+    tree layout
+  },
+  graphs/pace/stp/.style = {
+    spring electrical layout
+  },
+  graphs/pace/edgelist/.style = {
+    spring electrical layout
+  },
+  graphs/terminal/.style = {
+    color = red
+  }
+}
+
+% Load the Lua interface
+\begin{luacode*}
+  pacedrawing = require "pacedrawing"
+\end{luacode*}
+
+%
+% Main interface to the Lua layer. Gets a file name and either parses
+% a .gr or .td file and draws the corresponding graph or decomposition.
+%
+\newcommand{\pace}[1]{%
+  \luaexec{ pacedrawing.pace("#1") }
+}
+
+%
+% Apply a style to the graph. This has only an effect to the
+% next \pace call.
+%
+\newcommand{\paceApplyGraphStyle}[1]{
+  \luaexec{ pacedrawing.addOptionToGraph("#1") }
+}
+
+%
+% Apply a style to a set of vertices. This has only an effect to the
+% next \pace call.
+%
+\newcommand{\paceApplyVertexStyle}[2]{
+  \luaexec{ pacedrawing.addOptionToVertices({#1}, "#2") }
+}
+
+%
+% Apply a style to a set of edges. This has only an effect to the
+% next \pace call.
+%
+\newcommand{\paceApplyEdgeStyle}[2]{
+  \luaexec{ pacedrawing.addOptionToEdges({#1}, "#2") }
+}
+
+%
+% Clear all applied styles (to vertex, edges, and the graph).
+%
+\newcommand{\paceClear}{
+  \luaexec{ pacedrawing.clearGraph() }
+}
+
+% Show the edge weights in steiner tree instances.
+\newcommand{\paceShowEdgeWeights}{%
+  \luaexec{ pacedrawing.showEdgeWeights = true }
+}
+
+% Hide the edge weights in steiner tree instances (default).
+\newcommand{\paceHideEdgeWeights}{%
+  \luaexec{ pacedrawing.showEdgeWeights = false }
+}
