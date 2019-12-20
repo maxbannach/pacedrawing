@@ -35,7 +35,7 @@ pacedrawing.graph = { options = {}, V = {}, E = {} }
 --   4. call @see didGenerateString
 --   5. clear the graph data structure for another run
 --
-function pacedrawing.pace(filename)  
+function pacedrawing.pace(filename, opt)
    local format = pacedrawing.guessFileFormat(filename)
    assert(format ~= "unknown", "I was unable to detect the file format.")
 
@@ -48,8 +48,15 @@ function pacedrawing.pace(filename)
       pacedrawing.parseSTPGraph(filename)
    elseif format == "edgelist" then
       pacedrawing.parseEdgelistGraph(filename)
+   elseif format == "treedepth" then
+      pacedrawing.parseTreedepthDecomposition(filename)
    end
 
+   -- eventually override options
+   if opt:len() > 0 then
+      pacedrawing.graph.options = { opt }      
+   end
+   
    -- call the anchor function before the string generation
    pacedrawing.willGenerateString(pacedrawing.graph, tikz)
    
@@ -97,6 +104,7 @@ end
 --   - stp
 --   - td
 --   - edgelist
+--   - tree
 --
 -- If the file format could not be detacted, "unknown" is returned.
 --
@@ -123,6 +131,8 @@ function pacedrawing.guessFileFormat(filename)
       return "stp"
    elseif ext == "graph" then
       return "edgelist"
+   elseif ext == "tree" then
+      return "treedepth"
    end
 
    return "unknown"
@@ -167,7 +177,7 @@ end
 -- This function returns a string builder table that still needs to be concatenated.
 --
 function pacedrawing.generateString(g)
-   local sb = {}
+   local sb = {}   
    sb[#sb+1] = "\\graph["..table.concat(g.options, ", ").."]{"
    
    -- print vertices lexicographically sorted
@@ -206,6 +216,31 @@ end
 -- the graph is then not present anymore.
 --
 function pacedrawing.didGenerateString(g, tikz)
+end
+
+---
+-- Parse a treedepth decomposition in the format of PACE 2020.
+--
+function pacedrawing.parseTreedepthDecomposition(filename)
+   table.insert(pacedrawing.graph.options, "pace/treedepth")
+   local file = io.open(filename, "r")
+   local n = 0
+   local parent = {}
+   for line in file:lines() do
+      if n == 0 then goto continue end
+      parent[n] = line
+      ::continue::
+      n = n + 1
+   end
+   for i = 1,n-1 do pacedrawing.ensureVertex(tostring(i)) end
+   for i = 1,n-1 do
+      if parent[i] ~= "0" then
+	 pacedrawing.ensureEdge(tostring(i), parent[i])
+      else
+	 table.insert(pacedrawing.graph.V[tostring(i)].options, "root")
+      end
+   end
+   file:close()
 end
 
 ---

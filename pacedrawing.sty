@@ -6,7 +6,7 @@
 %
 % Author: Max Bannach
 %
-\ProvidesPackage{pacedrawing}[2018/06/08 v1.0]
+\ProvidesPackage{pacedrawing}[2019/12/20 v1.1]
 
 % We will parse the graph files using Lua
 \RequirePackage{luacode}
@@ -28,6 +28,13 @@
   graphs/pace/treedecomposition/.style = {
     tree layout
   },
+  graphs/pace/treedepth/.style = {
+    tree layout
+  },
+  graphs/pace/embedding/.style = {
+    use existing nodes,
+    edges = {thin, color = lightgray}
+  },
   graphs/pace/stp/.style = {
     spring electrical layout
   },
@@ -48,8 +55,10 @@
 % Main interface to the Lua layer. Gets a file name and either parses
 % a .gr or .td file and draws the corresponding graph or decomposition.
 %
-\newcommand{\pace}[1]{%
-  \luaexec{ pacedrawing.pace("#1") }
+% Optional some graph properties can be provided.
+%
+\newcommand{\pace}[2][]{%
+  \luaexec{ pacedrawing.pace("#2", "#1") }
 }
 
 %
